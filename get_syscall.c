@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
+#include <errno.h>
 char *syscall_map[512] = {0};
 
 void load_syscall_map()
@@ -10,6 +10,7 @@ void load_syscall_map()
      FILE *f=fopen("/usr/include/x86_64-linux-gnu/asm/unistd_64.h", "r");
     if(f==NULL)
     {
+        fprintf(stderr, "Warning: Failed to open unistd_64.h: %s\n", strerror(errno));
         return;
     }
     char line[256];
@@ -19,8 +20,12 @@ void load_syscall_map()
       int n;
       if(sscanf(line,"#define __NR_%s %d",name,&n)==2)
       {
-        if(n>=0 && n<512)
-         syscall_map[n]=strdup(name);
+        if(n>=0 && n<512) {
+           syscall_map[n]=strdup(name);
+           if (!syscall_map[n]) {
+               fprintf(stderr, "Error: memory allocation failed for syscall %s\n", name);
+           }
+        }
       }
 
     }

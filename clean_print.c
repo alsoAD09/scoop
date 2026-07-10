@@ -4,6 +4,7 @@
 #include <string.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <errno.h>
 static int current_depth = 0;
 static int ignore_depth = 0;
 const char *noise_filter[] = {
@@ -60,12 +61,16 @@ void print_shadow_trace(){
     FILE *trace=fopen("/sys/kernel/debug/tracing/trace","r");
     if(!trace)
     {
-        perror("Failed to open trace");
+        fprintf(stderr, "Failed to open trace: %s\n", strerror(errno));
         return;
     }
     int fd=fileno(trace);
     int flags=fcntl(fd,F_GETFL,0);
-    fcntl(fd,F_SETFL,flags | O_NONBLOCK);
+    if (flags < 0) {
+        fprintf(stderr, "Failed to get fcntl flags: %s\n", strerror(errno));
+    } else if (fcntl(fd, F_SETFL, flags | O_NONBLOCK) < 0) {
+        fprintf(stderr, "Failed to set fcntl flags: %s\n", strerror(errno));
+    }
     
     char line[1024];
     current_depth=0;
@@ -74,5 +79,6 @@ void print_shadow_trace(){
     {
        scoop_clean_and_print(line);
     } 
+    fclose(trace);
     clear_trace();
 }

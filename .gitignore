@@ -1,0 +1,6 @@
+# Compiled binaries
+scoop
+new
+
+# Object files
+*.o
