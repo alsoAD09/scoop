@@ -8,16 +8,22 @@ Scoop is a fun little tool that peeks under the hood for you. It pauses your pro
 
 ```mermaid
 sequenceDiagram
-    participant Program
-    participant Scoop
-    participant Kernel
+    participant P as Target Program
+    participant S as Scoop
+    participant K as Linux Kernel
 
-    Program->>Scoop: "Hey, I need to open a file!" (Syscall starts)
-    Scoop->>Kernel: "Hold on, let me start recording."
-    Kernel-->>Kernel: *Does all the complicated filesystem stuff*
-    Program->>Scoop: "Okay, I'm done." (Syscall ends)
-    Scoop->>Kernel: "Stop recording!"
-    Scoop->>Scoop: *Prints out the neat graph for you to read*
+    Note over P,K: 1. Syscall Entry
+    P->>S: Program triggers a System Call
+    S->>K: Scoop enables kernel tracing
+
+    Note over K: 2. Kernel Execution
+    K-->>K: Kernel performs the requested operation
+    K-->>K: Kernel records its internal function graph
+    
+    Note over P,K: 3. Syscall Exit
+    P->>S: System Call finishes
+    S->>K: Scoop disables kernel tracing
+    S->>S: Scoop prints the formatted trace graph
 ```
 
 ## 🚀 Try it out
